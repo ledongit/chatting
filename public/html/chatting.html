@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatting</title>
+    <link rel="stylesheet" href="../css/reset.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100;300;400;500&family=Roboto:wght@100;300;400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/layout.css" />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <header id="header">
+      <h1 id="logo">Messenger</h1>
+    </header>
+    <div class="contents">
+      <div class="user">
+        <label>
+          <span class="nick">사용자명</span>
+          <input
+            type="text"
+            placeholder="대화명을 입력해주세요."
+            id="nickName"
+          />
+        </label>
+      </div>
+      <div class="chattingBox">
+        <ul class="list">
+          <!-- <li class="other">
+            <div class="profile">
+              <img src="../images/man.png" alt="" />
+            </div>
+            <div class="msgBox">
+              <span class="name">카카오톡</span>
+              <div class="inner">
+                <div class="msg">안녕</div>
+                <div class="time">오후 06:30</div>
+              </div>
+            </div>
+          </li>
+          <li class="me">
+            <div class="profile">
+              <img src="../images/man.png" alt="" />
+            </div>
+            <div class="msgBox">
+              <span class="name">카카오톡</span>
+              <div class="inner">
+                <div class="msg">안녕</div>
+                <div class="time">오후 06:30</div>
+              </div>
+            </div>
+          </li> -->
+        </ul>
+      </div>
+      <div class="sendBox">
+        <label>
+          <textarea
+            name=""
+            id="msg"
+            cols="30"
+            rows="10"
+            placeholder="내용을 입력해주세요."
+          ></textarea>
+        </label>
+        <button class="btnSend">전송</button>
+      </div>
+    </div>
+  </body>
+  <script>
+    const socket = io();
+
+    // 서버에서 넘어오는 이벤트 받는 곳
+    // socket.on("chatting", (data) => {});
+    // socket.on("yaho", (data) => {
+    //   console.log(data);
+    // });
+
+    // 클라이언트에서 이벤트 보내는 곳
+    // socket.emit("yaho", "나는 yaho로 이벤트를 날리고 있습니다.");
+    // socket.emit("chatting", "안녕하세요");
+    $(".contents .sendBox .btnSend").on("click", () => {
+      if ($("#msg").val().trim() === "") {
+        e.preventDefault();
+        $("#msg").val("");
+        return;
+      }
+      const chattingItem = {
+        nickName: $("#nickName").val(),
+        msg: $(".sendBox #msg").val().replaceAll("\n", "<br>"),
+      };
+
+      socket.emit("chatting", chattingItem);
+      $(".sendBox #msg").val("");
+      $(".btnSend").removeClass("on");
+
+      if ($("#msg").val().trim() !== "") {
+        $(".btnSend").addClass("on");
+      } else {
+        $(".btnSend").removeClass("on");
+      }
+    });
+
+    $(".contents .sendBox #msg").on("keydown", function (e) {
+      if (e.keyCode === 13) {
+        if (!e.shiftKey) {
+          e.preventDefault();
+          if ($("#msg").val().trim() === "") {
+            e.preventDefault();
+            $("#msg").val("");
+            return;
+          }
+          const chattingItem = {
+            nickName: $("#nickName").val(),
+            msg: $(".sendBox #msg").val().replaceAll("\n", "<br>"),
+          };
+
+          socket.emit("chatting", chattingItem);
+          $(".sendBox #msg").val("");
+          $(".btnSend").removeClass("on");
+        }
+      }
+      if ($("#msg").val().trim() !== "") {
+        $(".btnSend").addClass("on");
+      } else {
+        $(".btnSend").removeClass("on");
+      }
+    });
+    // $(".contents .sendBox #msg").on("keyup", function (e) {});
+
+    socket.on("chatting", (data) => {
+      const meOrOther = data.nickName === $("#nickName").val() ? "me" : "other";
+      $(".chattingBox .list").append(`
+          <li class="${meOrOther}">
+            <div class="profile">
+              <img src="../images/man01.png" alt="" />
+            </div>
+            <div class="msgBox">
+              <span class="name">${data.nickName}</span>
+              <div class="inner">
+                <div class="msg">${data.msg}</div>
+                <div class="time">${data.time}</div>
+              </div>
+            </div>
+          </li>`);
+      // 내용 추가
+      $(".chattingBox").scrollTop($(".chattingBox .list").height());
+    });
+  </script>
+</html>
